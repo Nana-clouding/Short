@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短縮URL作成サイト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            width: 400px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .link-container {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .link-container a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .link-buttons button {
+            margin: 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .link-buttons .copy {
+            background-color: #28a745;
+            color: white;
+        }
+        .link-buttons .visit {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .link-buttons .delete {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>短縮URL作成</h2>
+    <input type="text" id="urlInput" placeholder="URLを入力">
+    <button class="button" onclick="createShortURL()">URLを短縮</button>
+
+    <div class="link-container" id="linkContainer" style="display: none;">
+        <p>短縮URL: <a id="shortLink" href="#" target="_blank"></a></p>
+        <div class="link-buttons">
+            <button class="copy" onclick="copyURL()">コピー</button>
+            <button class="visit" onclick="visitURL()">サイトに行く</button>
+            <button class="delete" onclick="deleteURL()">削除</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const apiKey = "sk_YLvdlCbkNvnF8bbI";
+    let shortUrlId;
+
+    function createShortURL() {
+        const originalUrl = document.getElementById("urlInput").value;
+        if (!originalUrl) {
+            alert("URLを入力してください");
+            return;
+        }
+
+        fetch("https://api.short.io/links", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": apiKey
+            },
+            body: JSON.stringify({
+                originalURL: originalUrl,
+                domain: "n4.f5.si" // Short.ioで設定したカスタムドメインを使用
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const shortUrl = data.shortURL;
+            shortUrlId = data.idString;
+            document.getElementById("shortLink").textContent = shortUrl;
+            document.getElementById("shortLink").href = shortUrl;
+            document.getElementById("linkContainer").style.display = "block";
+        })
+        .catch(error => console.error("Error:", error));
+    }
+
+    function copyURL() {
+        const shortLink = document.getElementById("shortLink").href;
+        navigator.clipboard.writeText(shortLink).then(() => {
+            alert("URLがコピーされました！");
+        });
+    }
+
+    function visitURL() {
+        window.open(document.getElementById("shortLink").href, "_blank");
+    }
+
+    function deleteURL() {
+        if (!shortUrlId) return;
+
+        fetch(`https://api.short.io/links/${shortUrlId}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": apiKey
+            }
+        })
+        .then(() => {
+            alert("短縮URLが削除されました");
+            document.getElementById("linkContainer").style.display = "none";
+        })
+        .catch(error => console.error("Error:", error));
+    }
+</script>
+
+</body>
+</html>
